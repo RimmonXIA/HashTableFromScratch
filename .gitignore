@@ -1,1 +1,53 @@
-*_cache
+# system
+.DS_Store
+
+# cache
+*.pyc
+**/__pycache__
+.cache
+
+# test
+.coverage*
+coverage.xml
+report.xml
+testdata
+
+# doc
+public
+
+# package
+build
+dist
+*.so
+
+# ide
+.vscode/
+.idea/
+.vim/
+tags
+
+# data
+*.csv
+
+# env
+requirements.txt
+venv
+
+# security
+bom.json
+
+# ide
+.vscode/
+.idea/
+.vim/
+tags
+
+# data
+*.csv
+
+# env
+requirements.txt
+venv
+
+# security
+bom.json
