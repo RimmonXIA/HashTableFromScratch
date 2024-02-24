@@ -9,15 +9,24 @@ class HashTable:
         return len(self.values)
     
     def __setitem__(self, key, value):
-        idx = hash(key) % len(self)
-        self.values[idx] = value
+        self.values[self._index(key)] = value
     
     def __getitem__(self, key):
-        idx = hash(key) % len(self)
-        value = self.values[idx]
+        value = self.values[self._index(key)]
         if value is BLANK:
             raise KeyError(key)
         return value
+
+    def __delitem__(self, key):
+        if key in self:        
+            self[key] = BLANK
+        else:
+            raise KeyError(key)
+        
+        # self.values[self._index(key)] = BLANK
+    
+    def _index(self, key):
+        return hash(key) % len(self)
     
     # for the 'in' operation
     def __contains__(self, key):
@@ -34,3 +43,4 @@ class HashTable:
             return self[key]
         except KeyError:
             return default
+    
