@@ -9,16 +9,7 @@ def test_should_report_capacity():
     assert len(HashTable(capacity=100)) == 100
     
 def test_should_create_empty_value_slots():
-    # Given
-    cap = 3
-    expected_values = [None] * cap
-    hash_table = HashTable(capacity=cap)
-    
-    # When
-    actual_values = hash_table.pairs
-    
-    # Then
-    assert actual_values == expected_values
+    assert [None] * 3 == HashTable(capacity=3)._pairs
     
 def test_should_insert_key_value_pairs():
     # Given
@@ -114,3 +105,11 @@ def test_should_return_pairs(hash_table):
     assert ("hola", "hello") in hash_table.pairs
     assert (98.6, 37) in hash_table.pairs
     assert (False, True) in hash_table.pairs
+
+def test_should_return_copy_of_pairs(hash_table):
+    # Whenever you request the key-value pairs from a hash table, 
+    #   you expect to get a brand-new object with a unique identity.
+    assert hash_table.pairs is not hash_table.pairs
+    
+def test_should_not_include_blank_pairs(hash_table):
+    assert None not in hash_table.pairs
