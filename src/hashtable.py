@@ -25,7 +25,7 @@ class HashTable:
 
     def __delitem__(self, key):
         if key in self:
-            self[key] = None
+            self._pairs[self._index(key)] = None
         else:
             raise KeyError(key)
 

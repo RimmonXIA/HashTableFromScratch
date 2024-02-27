@@ -2,6 +2,14 @@ from hashtable import HashTable
 import pytest
 from pytest_unordered import unordered
 
+@pytest.fixture    
+def hash_table():
+    sample_data = HashTable(capacity=100)
+    sample_data["hola"] = "hello"
+    sample_data[98.6] = 37
+    sample_data[False] = True
+    return sample_data
+
 def test_should_create_hashtable():
     assert HashTable(capacity=100) is not None
 
@@ -38,14 +46,6 @@ def test_should_insert_none_value():
     hash_table["key"] = None
     assert ("key", None) in hash_table.pairs
 
-@pytest.fixture    
-def hash_table():
-    sample_data = HashTable(capacity=100)
-    sample_data["hola"] = "hello"
-    sample_data[98.6] = 37
-    sample_data[False] = True
-    return sample_data
-
 def test_should_find_value_by_key(hash_table):
     assert hash_table["hola"] == "hello"
     assert hash_table[98.6] == 37
@@ -77,11 +77,13 @@ def test_should_get_value_with_default(hash_table):
     
 def test_should_delete_key_value_pair(hash_table):
     assert ("hola", "hello") in hash_table.pairs
+    assert "hola" in hash_table
     assert len(hash_table) == 100
         
     del hash_table["hola"]
     
     assert ("hola", "hello") not in hash_table.pairs
+    assert "hola" not in hash_table
     assert len(hash_table) == 100
 
 def test_should_raise_key_error_when_delete(hash_table):
