@@ -166,3 +166,20 @@ def test_should_not_create_hashtable_with_zero_capacity():
 def test_should_not_create_hashtable_with_negative_capacity():
     with pytest.raises(ValueError):
         HashTable(capacity=-100)
+        
+def test_should_iterate_over_values(hash_table):
+    for value in hash_table.values:
+        assert value in ("hello", 37, True)
+
+def test_should_iterate_over_keys(hash_table):
+    for key in hash_table.keys:
+        assert key in ("hola", 98.6, False)
+
+def test_should_iterate_over_items(hash_table):
+    for key, value in hash_table.pairs:
+        assert key in ("hola", 98.6, False)
+        assert value in ("hello", 37, True)
+
+def test_should_iterate_over_instance(hash_table):
+    for key in hash_table:
+        assert key in ("hola", 98.6, False)

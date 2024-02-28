@@ -12,6 +12,10 @@ class HashTable:
             self._slots = capacity * [None]
         else:
             raise ValueError(capacity)
+    
+    def __iter__(self):
+        yield from self.keys
+    
     # for `len(obj)`
     def __len__(self):
         return len(self.pairs)
