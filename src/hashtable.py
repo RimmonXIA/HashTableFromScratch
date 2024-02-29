@@ -12,7 +12,20 @@ class HashTable:
             self._slots = capacity * [None]
         else:
             raise ValueError(capacity)
+
+    # for `repr(obj)`
+    def __repr__(self) -> str:
+        cls = self.__class__.__name__
+        return f"{cls}.from_dict({str(self)})"
     
+    # for `str(obj)`
+    def __str__(self) -> str:
+        pairs = []
+        for key, value in self.pairs:
+            pairs.append(f"{key!r}: {value!r}")
+        return "{" + ", ".join(pairs) + "}"
+    
+    # handle `for` loops directly
     def __iter__(self):
         yield from self.keys
     
@@ -78,9 +91,10 @@ class HashTable:
     def capacity(self):
         return len(self._slots)
 
-# #%%
-# hash_table = HashTable(capacity=100)
-
-# # %%
-# hash_table["missing_key"]
-# # %%
+    @classmethod
+    def from_dict(cls, dictionary: dict, capacity=None):
+        # hash_table = cls(capacity) if capacity else cls(len(dictionary) * 10)
+        hash_table = cls(capacity or len(dictionary) * 10)
+        for key, value in dictionary.items():
+            hash_table[key] = value
+        return hash_table
