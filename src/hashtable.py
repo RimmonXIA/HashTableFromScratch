@@ -13,6 +13,14 @@ class HashTable:
         else:
             raise ValueError(capacity)
 
+    # for `==` and/or `!=`
+    def __eq__(self, __value: object) -> bool:
+        if self is __value:
+            return True
+        if type(self) is not type(__value):
+            return False
+        return set(self.pairs) == set(__value.pairs)
+
     # for `repr(obj)`
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -76,6 +84,9 @@ class HashTable:
     @property
     def pairs(self):
         return {pair for pair in self._slots if pair}
+
+    def copy(self):
+        return HashTable.from_dict(dict(self.pairs), self.capacity)
 
     # for `item.values`, may have & should return duplicate values
     @property
