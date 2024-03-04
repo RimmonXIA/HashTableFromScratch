@@ -264,3 +264,40 @@ def test_should_detect_hash_collision():
         assert hash("foobar") == 1
         assert hash("foobar") == 2
         assert hash("foobar") == 3
+
+def test_should_handle_hash_collision():
+    with patch("builtins.hash", return_value=24):
+        hash_table = HashTable(capacity=100)
+        hash_table[1] = 1
+        hash_table[2] = 2
+    assert hash_table[1] == 1
+    assert hash_table[2] == 2
+
+# @patch("builtins.hash", return_value=24)
+def test_should_setitem_getitem_after_deleting():
+    # Given
+    hash_table = HashTable(capacity=100)
+    with patch("builtins.hash", return_value=24):
+        hash_table["a1"] = 1
+    hash_table["b"] = 2
+    with patch("builtins.hash", return_value=24):
+        hash_table["a2"] = 3
+
+    assert hash_table["a1"] == 1
+    assert hash_table["b"] == 2
+    assert hash_table["a2"] == 3
+    
+    # When
+    del hash_table["a1"]
+    
+    # Then
+    #   get "a1" again should raise KeyError
+    with pytest.raises(KeyError) as exception_info:
+        hash_table["a1"]
+    assert exception_info.value.args[0] == "a1"
+    #   get & set "a2" should works well
+    assert hash_table["a2"] == 3
+    assert hash_table["b"] == 2
+    #   set "a1" again should works well
+    hash_table["a1"] = 4
+    assert hash_table["a1"] == 4
