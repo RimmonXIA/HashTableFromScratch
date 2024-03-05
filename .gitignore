@@ -5,6 +5,7 @@
 *.pyc
 **/__pycache__
 .cache
+**/*cache*
 
 # test
 .coverage*
@@ -20,12 +21,6 @@ build
 dist
 *.so
 
-# ide
-.vscode/
-.idea/
-.vim/
-tags
-
 # data
 *.csv
 
@@ -36,11 +31,6 @@ venv
 # security
 bom.json
 
-# ide
-.vscode/
-.idea/
-.vim/
-tags
 
 # data
 *.csv
