@@ -4,7 +4,7 @@ from hashtable import HashTable
 import pytest
 from pytest_unordered import unordered
 
-@pytest.fixture    
+@pytest.fixture
 def hash_table():
     sample_data = HashTable(capacity=100)
     sample_data["hola"] = "hello"
@@ -301,3 +301,28 @@ def test_should_setitem_getitem_after_deleting():
     #   set "a1" again should works well
     hash_table["a1"] = 4
     assert hash_table["a1"] == 4
+
+def test_would_run_out_of_capacity():
+    # Given
+    hash_table = HashTable(capacity=3)
+    with patch("builtins.hash", return_value=34):
+        hash_table[1] = 1
+        hash_table[2] = 2
+        hash_table[3] = 3
+    assert hash_table[1] == 1
+    assert hash_table[2] == 2
+    assert hash_table[3] == 3
+    assert len(hash_table) == 3
+
+    # When
+    with patch("builtins.hash", return_value=34):
+        del hash_table[1]
+        del hash_table[2]
+        del hash_table[3]
+
+    # Then
+    assert len(hash_table) == 0
+    with pytest.raises(MemoryError) as exception_info:
+        with patch("builtins.hash", return_value=34):
+            hash_table[4] = 4
+    assert exception_info.value.args[0] == (4, 4)

@@ -55,7 +55,7 @@ class HashTable:
                 self._slots[index] = Pair(key, value)
                 break
         else:
-            raise MemoryError("Not enough capacity")
+            raise MemoryError((key, value))
 
     # for "item[key]"
     def __getitem__(self, key):
@@ -71,7 +71,7 @@ class HashTable:
         for index, pair in self._probe(key):
             if pair is None:
                 raise KeyError(key)
-            if pair.value == DELETED:
+            if pair is DELETED:
                 continue
             if pair.key == key:
                 self._slots[index] = DELETED
