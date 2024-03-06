@@ -14,11 +14,13 @@ class HashTable:
             hash_table[key] = value
         return hash_table
 
-    def __init__(self, capacity=8) -> None:
+    def __init__(self, capacity=8, load_factor_threshold=0.6) -> None:
         if capacity < 1:
             raise ValueError("Capacity must be a positive number")
-        else:
-            self._slots = capacity * [None]
+        if not (0 < load_factor_threshold <= 1):
+            raise ValueError("Load factor must be a number in range (0, 1]")
+        self._slots = capacity * [None]
+        self._load_factor_threshold = load_factor_threshold
 
     # for `==` and/or `!=`
     def __eq__(self, __value: object) -> bool:
@@ -32,24 +34,28 @@ class HashTable:
     def __repr__(self) -> str:
         cls = self.__class__.__name__
         return f"{cls}.from_dict({str(self)})"
-    
+
     # for `str(obj)`
     def __str__(self) -> str:
         pairs = []
         for key, value in self.pairs:
             pairs.append(f"{key!r}: {value!r}")
         return "{" + ", ".join(pairs) + "}"
-    
+
     # handle `for` loops directly
     def __iter__(self):
         yield from self.keys
-    
+
     # for `len(obj)`
     def __len__(self):
         return len(self.pairs)
 
     # for `item[key] = value`
     def __setitem__(self, key, value):
+        if self.load_factor >= self._load_factor_threshold:
+            # raise MemoryError((key, value))
+            self._resize_and_rehash()
+
         # loop through the hash table until:
         #   - find an never-used slot
         #   - find the slot holds the pair with the matching key
@@ -61,10 +67,6 @@ class HashTable:
             if pair is None or pair.key == key:
                 self._slots[index] = Pair(key, value)
                 break
-        else:
-            # raise MemoryError((key, value))
-            self._resize_and_rehash()
-            self[key] = value
 
     def _resize_and_rehash(self):
         copy = HashTable(capacity=self.capacity * 2)
@@ -148,3 +150,8 @@ class HashTable:
     @property
     def capacity(self):
         return len(self._slots)
+
+    @property
+    def load_factor(self):
+        occupied_or_sentinel = [slot for slot in self._slots if slot]
+        return len(occupied_or_sentinel) / self.capacity
