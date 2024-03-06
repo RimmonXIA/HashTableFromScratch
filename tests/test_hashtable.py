@@ -201,7 +201,7 @@ def test_should_create_hashtable_from_dict():
     
     hash_table = HashTable.from_dict(dictionary)
     
-    assert hash_table.capacity == len(dictionary) * 10
+    assert hash_table.capacity == len(dictionary)
     assert hash_table.keys == set(dictionary.keys())
     assert unordered(hash_table.values) == list(dictionary.values())
     assert hash_table.pairs == set(dictionary.items())
@@ -302,7 +302,7 @@ def test_should_setitem_getitem_after_deleting():
     hash_table["a1"] = 4
     assert hash_table["a1"] == 4
 
-def test_would_run_out_of_capacity():
+def test_would_not_run_out_of_capacity():
     # Given
     hash_table = HashTable(capacity=3)
     with patch("builtins.hash", return_value=34):
@@ -322,7 +322,11 @@ def test_would_run_out_of_capacity():
 
     # Then
     assert len(hash_table) == 0
-    with pytest.raises(MemoryError) as exception_info:
-        with patch("builtins.hash", return_value=34):
-            hash_table[4] = 4
-    assert exception_info.value.args[0] == (4, 4)
+    with patch("builtins.hash", return_value=34):
+        hash_table[4] = 4
+    assert hash_table[4] == 4
+    assert len(hash_table) == 1
+    assert 1 not in hash_table.keys
+    assert 2 not in hash_table.keys
+    assert 3 not in hash_table.keys
+    assert hash_table.capacity == 6

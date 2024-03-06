@@ -7,11 +7,18 @@ class Pair(NamedTuple):
     value: Any
 
 class HashTable:
-    def __init__(self, capacity) -> None:
-        if capacity > 1:
-            self._slots = capacity * [None]
+    @classmethod
+    def from_dict(cls, dictionary: dict, capacity=None):
+        hash_table = cls(capacity or len(dictionary))
+        for key, value in dictionary.items():
+            hash_table[key] = value
+        return hash_table
+
+    def __init__(self, capacity=8) -> None:
+        if capacity < 1:
+            raise ValueError("Capacity must be a positive number")
         else:
-            raise ValueError(capacity)
+            self._slots = capacity * [None]
 
     # for `==` and/or `!=`
     def __eq__(self, __value: object) -> bool:
@@ -55,7 +62,15 @@ class HashTable:
                 self._slots[index] = Pair(key, value)
                 break
         else:
-            raise MemoryError((key, value))
+            # raise MemoryError((key, value))
+            self._resize_and_rehash()
+            self[key] = value
+
+    def _resize_and_rehash(self):
+        copy = HashTable(capacity=self.capacity * 2)
+        for key, value in self.pairs:
+            copy[key] = value
+        self._slots = copy._slots
 
     # for "item[key]"
     def __getitem__(self, key):
@@ -133,11 +148,3 @@ class HashTable:
     @property
     def capacity(self):
         return len(self._slots)
-
-    @classmethod
-    def from_dict(cls, dictionary: dict, capacity=None):
-        # hash_table = cls(capacity) if capacity else cls(len(dictionary) * 10)
-        hash_table = cls(capacity or len(dictionary) * 10)
-        for key, value in dictionary.items():
-            hash_table[key] = value
-        return hash_table
