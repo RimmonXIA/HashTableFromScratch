@@ -1,6 +1,6 @@
+from collections import deque
 from typing import NamedTuple, Any
 
-DELETED = object()
 
 class Pair(NamedTuple):
     key: Any
@@ -19,7 +19,7 @@ class HashTable:
             raise ValueError("Capacity must be a positive number")
         if not (0 < load_factor_threshold <= 1):
             raise ValueError("Load factor must be a number in range (0, 1]")
-        self._slots = capacity * [None]
+        self._buckets = [deque() for _ in range(capacity)]
         self._load_factor_threshold = load_factor_threshold
 
     # for `==` and/or `!=`
@@ -53,45 +53,38 @@ class HashTable:
     # for `item[key] = value`
     def __setitem__(self, key, value):
         if self.load_factor >= self._load_factor_threshold:
-            # raise MemoryError((key, value))
             self._resize_and_rehash()
 
-        # loop through the hash table until:
-        #   - find an never-used slot
-        #   - find the slot holds the pair with the matching key
-        #   - traverse the hash table
-        # this strategy made the slot disposable
-        for index, pair in self._probe(key):
-            if pair == DELETED:
-                continue
-            if pair is None or pair.key == key:
-                self._slots[index] = Pair(key, value)
-                break
+        bucket = self._buckets[self._index(key)]
+        for index, pair in enumerate(bucket):
+            if pair.key == key:
+                # if find the old key, update and return
+                bucket[index] = Pair(key, value)
+                return
+        # loop through whole bucket, append the pair
+        else:
+            bucket.append(Pair(key, value))
 
     def _resize_and_rehash(self):
         copy = HashTable(capacity=self.capacity * 2)
         for key, value in self.pairs:
             copy[key] = value
-        self._slots = copy._slots
+        self._buckets = copy._buckets
 
     # for "item[key]"
     def __getitem__(self, key):
-        for _, pair in self._probe(key):
-            if pair is None:
-                raise KeyError(key)
-            if pair is DELETED:
-                continue
+        bucket = self._buckets[self._index(key)]
+        for pair in bucket:
             if pair.key == key:
                 return pair.value
+        raise KeyError(key)
 
     def __delitem__(self, key):
-        for index, pair in self._probe(key):
-            if pair is None:
-                raise KeyError(key)
-            if pair is DELETED:
-                continue
+        bucket = self._buckets[self._index(key)]
+        # test when stores several identical pairs
+        for index, pair in enumerate(bucket):
             if pair.key == key:
-                self._slots[index] = DELETED
+                del bucket[index]
                 break
         else:
             raise KeyError(key)
@@ -99,17 +92,6 @@ class HashTable:
     # where all the `hash` magic happens
     def _index(self, key):
         return hash(key) % self.capacity
-
-    # use linear probing to handle hash collision
-    def _probe(self, key):
-        # loop through the full hash table
-        # start from the current key
-        index = self._index(key)
-        # covers the full range
-        for index in range(self.capacity):
-            # return index, pair once a time
-            yield index, self._slots[index]
-            index = (index + 1) % self.capacity
 
     # for the 'in' operation
     def __contains__(self, key):
@@ -127,12 +109,10 @@ class HashTable:
         except KeyError:
             return default
 
-    # defensive copy.
-    # only return non-None pairs
-    # pair shall be unique because of the the unique of the key
+    # two tiers loop to get all the pair
     @property
     def pairs(self):
-        return {pair for pair in self._slots if pair not in (None, DELETED)}
+        return {pair for bucket in self._buckets for pair in bucket}
 
     def copy(self):
         return HashTable.from_dict(dict(self.pairs), self.capacity)
@@ -149,9 +129,9 @@ class HashTable:
 
     @property
     def capacity(self):
-        return len(self._slots)
+        return len(self._buckets)
 
     @property
     def load_factor(self):
-        occupied_or_sentinel = [slot for slot in self._slots if slot]
-        return len(occupied_or_sentinel) / self.capacity
+        occupied = [bucket for bucket in self._buckets if bucket]
+        return len(occupied) / self.capacity

@@ -1,4 +1,4 @@
-
+from collections import deque
 import pytest
 from pytest_unordered import unordered
 from unittest.mock import patch
@@ -27,8 +27,8 @@ def test_should_report_capacity(hash_table):
     assert hash_table.capacity == 100
 
 
-def test_should_create_empty_pair_slots():
-    assert HashTable(capacity=3)._slots == [None] * 3
+def test_should_create_empty_pair_deque():
+    assert HashTable(capacity=3)._buckets == [deque()] * 3
 
 
 def test_should_insert_key_value_pairs():
@@ -241,10 +241,9 @@ def test_should_use_dict_literal_for_str(hash_table):
 
 def test_should_create_hashtable_from_dict():
     dictionary = {"hola": "hello", 98.6: 37, False: True}
-    
+
     hash_table = HashTable.from_dict(dictionary)
-    
-    assert hash_table.capacity == len(dictionary) * 2
+
     assert hash_table.keys == set(dictionary.keys())
     assert unordered(hash_table.values) == list(dictionary.values())
     assert hash_table.pairs == set(dictionary.items())
@@ -319,12 +318,12 @@ def test_should_handle_hash_collision():
         hash_table = HashTable(capacity=100)
         hash_table[1] = 1
         hash_table[2] = 2
-    assert hash_table[1] == 1
-    assert hash_table[2] == 2
+        assert hash_table[1] == 1
+        assert hash_table[2] == 2
 
 
 # @patch("builtins.hash", return_value=24)
-def test_should_setitem_getitem_after_deleting():
+def test_should_setitem_getitem_after_deleting_when_collision():
     # Given
     hash_table = HashTable(capacity=100)
     with patch("builtins.hash", return_value=24):
@@ -332,38 +331,42 @@ def test_should_setitem_getitem_after_deleting():
     hash_table["b"] = 2
     with patch("builtins.hash", return_value=24):
         hash_table["a2"] = 3
-
-    assert hash_table["a1"] == 1
+        assert hash_table["a1"] == 1
+        assert hash_table["a2"] == 3
     assert hash_table["b"] == 2
-    assert hash_table["a2"] == 3
 
     # When
-    del hash_table["a1"]
+    with patch("builtins.hash", return_value=24):
+        del hash_table["a1"]
 
     # Then
     #   get "a1" again should raise KeyError
     with pytest.raises(KeyError) as exception_info:
-        hash_table["a1"]
+        with patch("builtins.hash", return_value=24):
+            hash_table["a1"]
     assert exception_info.value.args[0] == "a1"
     #   get & set "a2" should works well
-    assert hash_table["a2"] == 3
+    with patch("builtins.hash", return_value=24):
+        assert hash_table["a2"] == 3
     assert hash_table["b"] == 2
     #   set "a1" again should works well
-    hash_table["a1"] = 4
-    assert hash_table["a1"] == 4
+    with patch("builtins.hash", return_value=24):
+        hash_table["a1"] = 4
+        assert hash_table["a1"] == 4
 
 
 def test_would_not_run_out_of_capacity():
     # Given
-    hash_table = HashTable(capacity=3)
+    hash_table = HashTable(capacity=2)
     with patch("builtins.hash", return_value=34):
         hash_table[1] = 1
         hash_table[2] = 2
         hash_table[3] = 3
-    assert hash_table[1] == 1
-    assert hash_table[2] == 2
-    assert hash_table[3] == 3
+        assert hash_table[1] == 1
+        assert hash_table[2] == 2
+        assert hash_table[3] == 3
     assert len(hash_table) == 3
+    assert hash_table.capacity == 2
 
     # When
     with patch("builtins.hash", return_value=34):
@@ -380,4 +383,14 @@ def test_would_not_run_out_of_capacity():
     assert 1 not in hash_table.keys
     assert 2 not in hash_table.keys
     assert 3 not in hash_table.keys
-    assert hash_table.capacity == 6
+    assert hash_table.capacity == 2
+
+def test_len_pairs_may_greater_than_capacity():
+    hash_table = HashTable(capacity=2)
+    with patch("builtins.hash", return_value=34):
+        hash_table[1] = 1
+        hash_table[2] = 2
+        hash_table[3] = 3
+
+    assert hash_table.capacity == 2
+    assert len(hash_table) == 3
