@@ -129,11 +129,11 @@ def test_should_update_value(hash_table):
 
 
 def test_should_return_pairs(hash_table):
-    assert hash_table.pairs == {
+    assert hash_table.pairs == [
         ("hola", "hello"),
         (98.6, 37),
         (False, True)
-    }
+    ]
 
 
 def test_should_return_copy_of_pairs(hash_table):
@@ -147,7 +147,7 @@ def test_should_not_include_blank_pairs(hash_table):
 
 
 def test_should_get_pairs_of_empty_hash_table():
-    assert HashTable(capacity=100).pairs == set()
+    assert HashTable(capacity=100).pairs == []
 
 
 def test_should_return_duplicate_values():
@@ -171,11 +171,11 @@ def test_should_return_copy_of_values(hash_table):
 
 
 def test_should_get_keys(hash_table):
-    assert hash_table.keys == {"hola", 98.6, False}
+    assert hash_table.keys == ["hola", 98.6, False]
 
 
 def test_should_get_keys_of_empty_hash_table():
-    assert HashTable(capacity=100).keys == set()
+    assert HashTable(capacity=100).keys == []
 
 
 def test_should_return_copy_of_keys(hash_table):
@@ -184,9 +184,9 @@ def test_should_return_copy_of_keys(hash_table):
 
 def test_should_convert_to_dict(hash_table):
     dictionary = dict(hash_table.pairs)
-    assert set(dictionary.items()) == hash_table.pairs
-    assert set(dictionary.keys()) == hash_table.keys
-    assert list(dictionary.values()) == unordered(hash_table.values)
+    assert hash_table.keys == list(dictionary.keys())
+    assert hash_table.pairs == list(dictionary.items())
+    assert hash_table.values == list(dictionary.values())
 
 
 def test_should_report_length_of_empty_hash_table():
@@ -244,9 +244,9 @@ def test_should_create_hashtable_from_dict():
 
     hash_table = HashTable.from_dict(dictionary)
 
-    assert hash_table.keys == set(dictionary.keys())
-    assert unordered(hash_table.values) == list(dictionary.values())
-    assert hash_table.pairs == set(dictionary.items())
+    assert hash_table.keys == list(dictionary.keys())
+    assert hash_table.pairs == list(dictionary.items())
+    assert hash_table.values == list(dictionary.values())
 
 
 def test_should_create_hashtable_from_dict_with_custom_capacity():
@@ -255,9 +255,9 @@ def test_should_create_hashtable_from_dict_with_custom_capacity():
     hash_table = HashTable.from_dict(dictionary, capacity=100)
 
     assert hash_table.capacity == 100
-    assert hash_table.keys == set(dictionary.keys())
-    assert unordered(hash_table.values) == list(dictionary.values())
-    assert hash_table.pairs == set(dictionary.items())
+    assert hash_table.keys == list(dictionary.keys())
+    assert hash_table.pairs == list(dictionary.items())
+    assert hash_table.values == list(dictionary.values())
 
 
 def test_should_have_canonical_string_representation(hash_table):
@@ -292,9 +292,9 @@ def test_should_compare_unequal_another_data_type(hash_table):
 def test_should_copy_keys_values_pairs_capacity(hash_table):
     copy = hash_table.copy()
     assert copy is not hash_table
-    assert set(hash_table.keys) == set(copy.keys)
-    assert set(hash_table.pairs) == copy.pairs
-    assert unordered(hash_table.values) == copy.values
+    assert hash_table.keys == copy.keys
+    assert hash_table.pairs == copy.pairs
+    assert hash_table.values == copy.values
     assert hash_table.capacity == copy.capacity
 
 
@@ -365,8 +365,8 @@ def test_would_not_run_out_of_capacity():
         assert hash_table[1] == 1
         assert hash_table[2] == 2
         assert hash_table[3] == 3
-    assert len(hash_table) == 3
-    assert hash_table.capacity == 2
+        assert len(hash_table) == 3
+        assert hash_table.capacity == 2
 
     # When
     with patch("builtins.hash", return_value=34):
@@ -378,8 +378,8 @@ def test_would_not_run_out_of_capacity():
     assert len(hash_table) == 0
     with patch("builtins.hash", return_value=34):
         hash_table[4] = 4
-    assert hash_table[4] == 4
-    assert len(hash_table) == 1
+        assert hash_table[4] == 4
+        assert len(hash_table) == 1
     assert 1 not in hash_table.keys
     assert 2 not in hash_table.keys
     assert 3 not in hash_table.keys
@@ -392,5 +392,16 @@ def test_len_pairs_may_greater_than_capacity():
         hash_table[2] = 2
         hash_table[3] = 3
 
+        assert len(hash_table) == 3
     assert hash_table.capacity == 2
-    assert len(hash_table) == 3
+
+
+def test_should_retain_insertion_order():
+    hash_table = HashTable(capacity=10)
+
+    hash_table[1] = '1'
+    hash_table[2] = '2'
+
+    assert hash_table.keys == [1, 2]
+    assert hash_table.values == ['1', '2']
+    assert hash_table.pairs == [(1, '1'), (2, '2')]

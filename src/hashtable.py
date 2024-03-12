@@ -19,6 +19,7 @@ class HashTable:
             raise ValueError("Capacity must be a positive number")
         if not (0 < load_factor_threshold <= 1):
             raise ValueError("Load factor must be a number in range (0, 1]")
+        self._keys = []
         self._buckets = [deque() for _ in range(capacity)]
         self._load_factor_threshold = load_factor_threshold
 
@@ -63,13 +64,19 @@ class HashTable:
                 return
         # loop through whole bucket, append the pair
         else:
+            self._keys.append(key)
             bucket.append(Pair(key, value))
 
-    def _resize_and_rehash(self):
-        copy = HashTable(capacity=self.capacity * 2)
-        for key, value in self.pairs:
-            copy[key] = value
-        self._buckets = copy._buckets
+    def __delitem__(self, key):
+        bucket = self._buckets[self._index(key)]
+        # test when stores several identical pairs
+        for index, pair in enumerate(bucket):
+            if pair.key == key:
+                self._keys.remove(key)
+                del bucket[index]
+                break
+        else:
+            raise KeyError(key)
 
     # for "item[key]"
     def __getitem__(self, key):
@@ -79,15 +86,11 @@ class HashTable:
                 return pair.value
         raise KeyError(key)
 
-    def __delitem__(self, key):
-        bucket = self._buckets[self._index(key)]
-        # test when stores several identical pairs
-        for index, pair in enumerate(bucket):
-            if pair.key == key:
-                del bucket[index]
-                break
-        else:
-            raise KeyError(key)
+    def _resize_and_rehash(self):
+        copy = HashTable(capacity=self.capacity * 2)
+        for key, value in self.pairs:
+            copy[key] = value
+        self._buckets = copy._buckets
 
     # where all the `hash` magic happens
     def _index(self, key):
@@ -109,23 +112,23 @@ class HashTable:
         except KeyError:
             return default
 
-    # two tiers loop to get all the pair
+    # for `obj.keys`, should only have unique keys
     @property
-    def pairs(self):
-        return {pair for bucket in self._buckets for pair in bucket}
-
-    def copy(self):
-        return HashTable.from_dict(dict(self.pairs), self.capacity)
+    def keys(self):
+        return self._keys.copy()
 
     # for `item.values`, may have & should return duplicate values
     @property
     def values(self):
-        return [pair.value for pair in self.pairs]
-    
-    # for `obj.keys`, should only have unique keys
+        return [self[key] for key in self._keys]
+
+    # two tiers loop to get all the pair
     @property
-    def keys(self):
-        return {pair.key for pair in self.pairs}
+    def pairs(self):
+        return [(key, self[key]) for key in self._keys]
+
+    def copy(self):
+        return HashTable.from_dict(dict(self.pairs), self.capacity)
 
     @property
     def capacity(self):
